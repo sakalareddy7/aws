@@ -1,0 +1,36 @@
+Certainly! Here’s a more polished and detailed version of the instructions:
+
+---
+
+This script sends a notification via email when the RS and EC2 instances are older than 7 days. Follow these steps:
+
+1. **Create an SNS (Simple Notification Service) Topic:**
+   - Log in to the AWS Management Console.
+   - Navigate to the SNS service.
+   - Click on "Create topic."
+   - Choose the topic type (Standard or FIFO) and configure the topic settings as needed.
+   - Click "Create topic."
+
+2. **Create a Subscription:**
+   - In the SNS dashboard, select the topic you created.
+   - Click on "Create subscription."
+   - Choose the protocol as "Email" and enter the email address where notifications should be sent.
+   - Click "Create subscription."
+   - Confirm the subscription by clicking on the confirmation link sent to your email.
+
+3. **Deploy the Script:**
+   - Copy the script that checks the age of RS and EC2 instances and sends notifications.
+   - Place the script on your server where it will be executed.
+
+4. **Schedule the Script:**
+   - Use cron to schedule the script to run periodically.
+   - Edit the crontab file by running `crontab -e` in your terminal.
+   - Add an entry to execute the script daily (or as needed). For example, to run the script every day at midnight, add:
+     ```shell
+     0 0 * * * /path/to/your/script.sh
+     ```
+   - Save and exit the crontab editor.
+
+---
+
+Make sure to replace `/path/to/your/script.sh` with the actual path to your script. Adjust the cron schedule as necessary for your needs.
