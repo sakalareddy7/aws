@@ -1,0 +1,63 @@
+#!/bin/bash
+
+# Configuration
+EC2_INSTANCE_ID="i-08b82316172e43819"  # Replace with your EC2 instance ID
+REDSHIFT_CLUSTER_ID="rcx-demo-wu-bi-redshift-redshift-1vnjfb8k-cluster-popd4gz493ow"        # Replace with your Redshift cluster ID
+
+# Get the current date in epoch seconds
+current_date=$(date +%s)
+
+# Check EC2 Instance
+echo "Checking EC2 Instance: $EC2_INSTANCE_ID"
+# Get the launch time of the EC2 instance
+launch_time=$(aws ec2 describe-instances --instance-ids "$EC2_INSTANCE_ID" --query 'Reservations[*].Instances[*].LaunchTime' --output text)
+if [ -z "$launch_time" ]; then
+    echo "Instance $EC2_INSTANCE_ID not found or error retrieving data."
+    exit 1
+fi
+
+# Convert launch time to epoch seconds
+launch_time_epoch=$(date -d "$launch_time" +%s)
+
+# Calculate the difference in days
+diff_days=$(( (current_date - launch_time_epoch) / 86400 ))
+
+function snspublish(){
+    TOPICNAME="arn:aws:sns:us-west-2:254847454774:RCX-Demo-Redshift-and-Power-BI-Uptime"
+    REGION="us-west-2"
+    subject="RS and powerbi Health Alert"
+    aws sns publish --region "$REGION" --topic-arn "$TOPICNAME"  --message "$message" --subject "$subject"
+}
+
+# Check if the instance has been running for more than 7 days
+if [ "$diff_days" -gt 7 ]; then
+    echo "EC2 Instance $EC2_INSTANCE_ID has been running for more than 7 days (Launch Time: $launch_time)"
+    message="EC2 Instance $EC2_INSTANCE_ID has been running for more than 7 days (Launch Time: $launch_time)"
+    snspublish $message
+else
+    echo "EC2 Instance $EC2_INSTANCE_ID has been running for $diff_days days (Launch Time: $launch_time)"
+fi
+
+# Check Redshift Cluster
+echo "Checking Redshift Cluster: $REDSHIFT_CLUSTER_ID"
+# Get the creation time of the Redshift cluster
+create_time=$(aws redshift describe-clusters --cluster-identifier "$REDSHIFT_CLUSTER_ID" --query 'Clusters[0].ClusterCreateTime' --output text)
+if [ -z "$create_time" ]; then
+    echo "Cluster $REDSHIFT_CLUSTER_ID not found or error retrieving data."
+    exit 1
+fi
+
+# Convert creation time to epoch seconds
+create_time_epoch=$(date -d "$create_time" +%s)
+
+# Calculate the difference in days
+diff_days=$(( (current_date - create_time_epoch) / 86400 ))
+
+# Check if the cluster has been active for more than 7 days
+if [ "$diff_days" -gt 7 ]; then
+    echo "Redshift Cluster $REDSHIFT_CLUSTER_ID has been active for more than 7 days (Creation Time: $create_time)"
+    message="Redshift Cluster $REDSHIFT_CLUSTER_ID has been active for more than 7 days (Creation Time: $create_time)"
+    snspublish $message
+else
+    echo "Redshift Cluster $REDSHIFT_CLUSTER_ID has been active for $diff_days days (Creation Time: $create_time)"
+fi
