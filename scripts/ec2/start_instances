@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# Define an array of instance IDs with comments
+declare -A instance_ids=(
+  ["i-0f948a6bf11aff4ee"]="act-db1"
+  ["i-0845018f74bcee75c"]="act-db2"
+  ["i-05849ddeae94c7c86"]="act-db3"
+)
+
+# Start each EC2 instance
+for instance_id in "${!instance_ids[@]}"
+do
+  echo "Starting ${instance_ids[$instance_id]} ($instance_id)..."
+  aws ec2 start-instances --instance-ids "$instance_id"
+done
